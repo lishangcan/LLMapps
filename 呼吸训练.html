@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正念呼吸</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+        }
+        .breathing-container {
+            text-align: center;
+        }
+        .circle {
+            width: 200px;
+            height: 200px;
+            background-color: #007BFF;
+            border-radius: 50%;
+            margin: 20px auto;
+            transition: transform 4s ease;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        .controls select, .controls input, .controls button {
+            padding: 10px;
+            margin: 5px;
+        }
+        .controls button {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+        #exitButton {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        #exitButton:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="breathing-container">
+        <h1 id="title">正念呼吸</h1>
+        <div class="circle" id="circle"></div>
+        <div class="controls" id="controls">
+            <select id="breathFrequency">
+                <option value="5">每分钟5次</option>
+                <option value="6">每分钟6次</option>
+                <option value="7">每分钟7次</option>
+                <option value="8">每分钟8次</option>
+                <option value="9">每分钟9次</option>
+                <option value="10">每分钟10次</option>
+            </select>
+            <input type="number" id="duration" placeholder="持续时间（分钟）">
+            <input type="color" id="colorPicker" value="#007BFF">
+            <button onclick="applyColor()">应用颜色</button>
+            <input type="range" id="sizeSlider" min="100" max="300" value="200">
+            <span id="sizeText">200px</span>
+            <button onclick="startBreathing()">开始呼吸练习</button>
+        </div>
+        <button id="exitButton" class="hidden" onclick="exitBreathing()">退出呼吸练习</button>
+    </div>
+
+    <script>
+        let interval;
+
+        function applyColor() {
+            const circle = document.getElementById('circle');
+            const color = document.getElementById('colorPicker').value;
+            circle.style.backgroundColor = color;
+        }
+
+        function startBreathing() {
+            const circle = document.getElementById('circle');
+            const breathFrequency = parseInt(document.getElementById('breathFrequency').value);
+            const durationMinutes = parseInt(document.getElementById('duration').value) || 1; // 默认1分钟
+            const durationSeconds = durationMinutes * 60; // 转换为秒
+            const breathDuration = 60 / breathFrequency; // 每次呼吸的秒数
+            const size = parseInt(document.getElementById('sizeSlider').value);
+
+            circle.style.width = `${size}px`;
+            circle.style.height = `${size}px`;
+
+            document.getElementById('title').classList.add('hidden');
+            document.getElementById('controls').classList.add('hidden');
+            document.getElementById('exitButton').classList.remove('hidden');
+
+            let time = 0;
+            interval = setInterval(() => {
+                if (time >= durationSeconds) {
+                    clearInterval(interval);
+                    circle.style.transform = 'scale(1)';
+                    exitBreathing();
+                    return;
+                }
+
+                const scale = time % breathDuration < breathDuration / 2 ? 
+                             (time % breathDuration) / (breathDuration / 2) + 1 : 
+                             2 - ((time % breathDuration) / (breathDuration / 2));
+                circle.style.transform = `scale(${scale})`;
+                time += 0.1;
+            }, 100);
+        }
+
+        function exitBreathing() {
+            clearInterval(interval);
+            const circle = document.getElementById('circle');
+            circle.style.transform = 'scale(1)';
+            document.getElementById('title').classList.remove('hidden');
+            document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('exitButton').classList.add('hidden');
+        }
+
+        document.getElementById('sizeSlider').addEventListener('input', function() {
+            const sizeText = document.getElementById('sizeText');
+            sizeText.textContent = `${this.value}px`;
+        });
+    </script>
+</body>
+</html>

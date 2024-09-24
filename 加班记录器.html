@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加班记录器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, button {
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        .delete-all-btn {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .delete-all-btn:hover {
+            background-color: #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>加班记录器</h1>
+        <div class="form-group">
+            <label for="date">加班日期:</label>
+            <input type="date" id="date" value="" required>
+        </div>
+        <button onclick="addOvertime()">添加加班记录</button>
+
+        <h2>加班记录列表</h2>
+        <table id="overtimeTable">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 加班记录将在这里显示 -->
+            </tbody>
+        </table>
+        <button class="delete-all-btn" onclick="deleteAllRecords()">全部删除</button>
+
+        <h2>月底汇总</h2>
+        <button onclick="summarizeOvertime()">汇总加班情况</button>
+        <div id="summary"></div>
+
+        <h2>导出数据</h2>
+        <button onclick="exportData()">导出加班记录</button>
+    </div>
+
+    <script>
+        const storageKey = 'overtimeRecords';
+
+        function getRecords() {
+            const records = localStorage.getItem(storageKey);
+            return records ? JSON.parse(records) : [];
+        }
+
+        function saveRecords(records) {
+            localStorage.setItem(storageKey, JSON.stringify(records));
+        }
+
+        function addOvertime() {
+            const date = document.getElementById('date').value;
+
+            if (date) {
+                const records = getRecords();
+                records.push(date);
+                saveRecords(records);
+                displayRecords();
+            } else {
+                alert('请选择加班日期');
+            }
+        }
+
+        function displayRecords() {
+            const records = getRecords();
+            const tableBody = document.querySelector('#overtimeTable tbody');
+            tableBody.innerHTML = '';
+
+            records.forEach((record, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${record}</td><td><button class="delete-btn" data-index="${index}">删除</button></td>`;
+                tableBody.appendChild(row);
+            });
+
+            // 添加删除按钮的事件监听器
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    deleteRecord(index);
+                });
+            });
+        }
+
+        function deleteRecord(index) {
+            const records = getRecords();
+            records.splice(index, 1);
+            saveRecords(records);
+            displayRecords();
+        }
+
+        function deleteAllRecords() {
+            if (confirm('确定要删除所有加班记录吗？')) {
+                localStorage.removeItem(storageKey);
+                displayRecords();
+            }
+        }
+
+        function summarizeOvertime() {
+            const records = getRecords();
+            const totalDays = records.length;
+            const mealAllowance = totalDays * 30; // 计算加班餐费
+
+            const summaryDiv = document.getElementById('summary');
+            summaryDiv.innerHTML = `
+                <p>总加班天数: ${totalDays}</p>
+                <p>加班餐费: ${mealAllowance} 元</p>
+            `;
+        }
+
+        function exportData() {
+            const records = getRecords();
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + records.map(record => `${record}`).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "overtime_records.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        // 初始化显示记录
+        displayRecords();
+
+        // 设置日期选择器默认值为今天
+        document.getElementById('date').valueAsDate = new Date();
+    </script>
+</body>
+</html>
